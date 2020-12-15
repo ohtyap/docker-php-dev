@@ -1,0 +1,4 @@
+ARG POSTGRES_VERSION=13.1
+FROM postgres:${POSTGRES_VERSION}-alpine
+CMD ["postgres"]
+EXPOSE 5432

@@ -1,0 +1,99 @@
+version: "3"
+
+volumes:
+  data:
+    driver: local
+
+services:
+  web-01:
+    container_name: web-01
+    build:
+      context: docker/nginx
+      args:
+        - PHP_UPSTREAMS=php-fpm-01
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./code:/srv/www
+      - ./sites:/etc/nginx/sites-available
+
+  php-fpm-01:
+    container_name: php-fpm-01
+    build:
+      context: docker/php-fpm
+      args:
+        - PHP_VERSION=8.0
+    volumes:
+      - ./code:/srv/www
+
+  php-cli-01:
+    container_name: php-cli-01
+    build:
+      context: docker/php-cli
+      args:
+        - PHP_VERSION=8.0
+    volumes:
+      - ./code:/srv/www
+      - ./supervisor:/etc/supervisord.d
+
+  mysql-01:
+    container_name: mysql-01
+    build:
+      context: docker/mysql
+      args:
+        - MYSQL_VERSION=8
+    ports:
+      - "3306:3306"
+    volumes:
+      - ~/.docker-php-dev/data/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+
+  postgres-01:
+    container_name: postgres-01
+    build:
+      context: docker/postgres
+      args:
+        - POSTGRES_VERSION=13.1
+    ports:
+      - "5432:5432"
+    volumes:
+      - ~/.docker-php-dev/data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=root
+
+  mongo-01:
+    container_name: mongo-01
+    build:
+      context: docker/mongo
+      args:
+        - MONGO_VERSION=4
+    ports:
+      - "27017:27017"
+    volumes:
+      - ~/.docker-php-dev/data/mongo:/data/db
+
+  memcache-01:
+    container_name: memcache-01
+    build:
+      context: docker/memcached
+    ports:
+      - "11211:11211"
+
+  redis-01:
+    container_name: redis-01
+    build:
+      context: docker/redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ~/.docker-php-dev/data/redis:/data
+
+  mail-01:
+    container_name: mail-01
+    build:
+      context: docker/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
