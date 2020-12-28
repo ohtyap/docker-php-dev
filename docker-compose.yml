@@ -5,40 +5,59 @@ volumes:
     driver: local
 
 services:
-  web-01:
-    container_name: web-01
+  web:
+    container_name: web
     build:
       context: docker/nginx
       args:
-        - PHP_UPSTREAMS=php-fpm-01
+        - PHP_UPSTREAMS=php-fpm-80 php-fpm-74
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./code:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www
       - ./sites:/etc/nginx/sites-available
 
-  php-fpm-01:
-    container_name: php-fpm-01
+  php-fpm-80:
+    container_name: php-fpm-80
     build:
       context: docker/php-fpm
       args:
         - PHP_VERSION=8.0
     volumes:
-      - ./code:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www
 
-  php-cli-01:
-    container_name: php-cli-01
+  php-fpm-74:
+    container_name: php-fpm-74
+    build:
+      context: docker/php-fpm
+      args:
+        - PHP_VERSION=7.4
+    volumes:
+      - ${APP_CODE_PATH_HOST}:/srv/www
+
+  php-cli-80:
+    container_name: php-cli-80
     build:
       context: docker/php-cli
       args:
         - PHP_VERSION=8.0
     volumes:
-      - ./code:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www
       - ./supervisor:/etc/supervisord.d
 
-  mysql-01:
-    container_name: mysql-01
+  php-cli-74:
+    container_name: php-cli-74
+    build:
+      context: docker/php-cli
+      args:
+        - PHP_VERSION=7.4
+    volumes:
+      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ./supervisor:/etc/supervisord.d
+
+  mysql-80:
+    container_name: mysql-80
     build:
       context: docker/mysql
       args:
@@ -50,8 +69,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
 
-  postgres-01:
-    container_name: postgres-01
+  postgres-131:
+    container_name: postgres-13
     build:
       context: docker/postgres
       args:
@@ -63,8 +82,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=root
 
-  mongo-01:
-    container_name: mongo-01
+  mongo-4:
+    container_name: mongo-4
     build:
       context: docker/mongo
       args:
@@ -74,15 +93,15 @@ services:
     volumes:
       - ~/.docker-php-dev/data/mongo:/data/db
 
-  memcache-01:
-    container_name: memcache-01
+  memcache:
+    container_name: memcache
     build:
       context: docker/memcached
     ports:
       - "11211:11211"
 
-  redis-01:
-    container_name: redis-01
+  redis:
+    container_name: redis
     build:
       context: docker/redis
     ports:
@@ -90,8 +109,22 @@ services:
     volumes:
       - ~/.docker-php-dev/data/redis:/data
 
-  mail-01:
-    container_name: mail-01
+  elasticsearch-7:
+    container_name: elasticsearch-7
+    build:
+      context: docker/elasticsearch
+      args:
+        - ElASTICSEARCH_VERSION=7.10.1
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ~/.docker-php-dev/data/elasticsearch:/usr/share/elasticsearch/data
+
+  mail:
+    container_name: mail
     build:
       context: docker/mailhog
     ports:
