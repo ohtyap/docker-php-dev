@@ -84,7 +84,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ~/.docker-php-dev/data/mysql:/var/lib/mysql
+      - ~/.docker-php-dev/data/mysql80:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
 
@@ -97,7 +97,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ~/.docker-php-dev/data/postgres:/var/lib/postgresql/data
+      - ~/.docker-php-dev/data/postgres13:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=root
 
@@ -112,21 +112,25 @@ services:
     volumes:
       - ~/.docker-php-dev/data/mongo:/data/db
 
-  memcache:
-    container_name: memcache
+  memcached-1:
+    container_name: memcached-1
     build:
       context: docker/memcached
+      args:
+        - MEMCACHED_VERSION=1.6
     ports:
       - "11211:11211"
 
-  redis:
-    container_name: redis
+  redis-6:
+    container_name: redis-6
     build:
       context: docker/redis
+      args:
+        - REDIS_VERSION=6
     ports:
       - "6379:6379"
     volumes:
-      - ~/.docker-php-dev/data/redis:/data
+      - ~/.docker-php-dev/data/redis6:/data
 
   elasticsearch-7:
     container_name: elasticsearch-7
@@ -140,7 +144,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - ~/.docker-php-dev/data/elasticsearch:/usr/share/elasticsearch/data
+      - ~/.docker-php-dev/data/elasticsearch7:/usr/share/elasticsearch/data
 
   mail:
     container_name: mail

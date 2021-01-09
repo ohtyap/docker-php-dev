@@ -1,3 +1,4 @@
-FROM redis:alpine
+ARG REDIS_VERSION=6
+FROM redis:${REDIS_VERSION}-alpine
 CMD ["redis-server"]
 EXPOSE 6379
