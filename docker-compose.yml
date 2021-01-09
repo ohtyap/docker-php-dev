@@ -10,7 +10,7 @@ services:
     build:
       context: docker/nginx
       args:
-        - PHP_UPSTREAMS=php-fpm-80 php-fpm-74
+        - PHP_UPSTREAMS=php-fpm-80 php-fpm-74 php-fpm-73
     ports:
       - "80:80"
       - "443:443"
@@ -36,25 +36,44 @@ services:
     volumes:
       - ${APP_CODE_PATH_HOST}:/srv/www
 
-  php-cli-80:
-    container_name: php-cli-80
+  php-fpm-73:
+    container_name: php-fpm-73
     build:
-      context: docker/php-cli
+      context: docker/php-fpm
+      args:
+        - PHP_VERSION=7.3
+    volumes:
+      - ${APP_CODE_PATH_HOST}:/srv/www
+
+  workspace-php-80:
+    container_name: workspace-php-80
+    build:
+      context: docker/workspace-php
       args:
         - PHP_VERSION=8.0
+    tty: true
     volumes:
       - ${APP_CODE_PATH_HOST}:/srv/www
-      - ./supervisor:/etc/supervisord.d
 
-  php-cli-74:
-    container_name: php-cli-74
+  workspace-php-74:
+    container_name: workspace-php-74
     build:
-      context: docker/php-cli
+      context: docker/workspace-php
       args:
         - PHP_VERSION=7.4
+    tty: true
     volumes:
       - ${APP_CODE_PATH_HOST}:/srv/www
-      - ./supervisor:/etc/supervisord.d
+
+  workspace-php-73:
+    container_name: workspace-php-73
+    build:
+      context: docker/workspace-php
+      args:
+        - PHP_VERSION=7.3
+    tty: true
+    volumes:
+      - ${APP_CODE_PATH_HOST}:/srv/www
 
   mysql-80:
     container_name: mysql-80
@@ -69,7 +88,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
 
-  postgres-131:
+  postgres-13:
     container_name: postgres-13
     build:
       context: docker/postgres
