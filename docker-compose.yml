@@ -15,7 +15,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www:delegated
       - ./sites:/etc/nginx/sites-available
 
   php-fpm-80:
@@ -25,7 +25,7 @@ services:
       args:
         - PHP_VERSION=8.0
     volumes:
-      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www:delegated
 
   php-fpm-74:
     container_name: php-fpm-74
@@ -34,7 +34,7 @@ services:
       args:
         - PHP_VERSION=7.4
     volumes:
-      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www:delegated
 
   php-fpm-73:
     container_name: php-fpm-73
@@ -43,7 +43,7 @@ services:
       args:
         - PHP_VERSION=7.3
     volumes:
-      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www:delegated
 
   workspace-php-80:
     container_name: workspace-php-80
@@ -51,9 +51,22 @@ services:
       context: docker/workspace-php
       args:
         - PHP_VERSION=8.0
+        - INSTALL_INTL=true
+        - INSTALL_OPCACHE=true
+        - INSTALL_XDEBUG=true
+        - INSTALL_REDIS=true
+        - INSTALL_MONGO=true
+        - INSTALL_PDO_MYSQL=true
+        - INSTALL_PDO_PGSQL=true
+        - INSTALL_EXIF=true
+        - INSTALL_GD=true
+        - INSTALL_IMAGICK=true
+        - INSTALL_PCOV=true
+        - INSTALL_XHPROF=true
     tty: true
     volumes:
-      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www:delegated
+      - ./keys:/home/develop/.keys
 
   workspace-php-74:
     container_name: workspace-php-74
@@ -63,7 +76,8 @@ services:
         - PHP_VERSION=7.4
     tty: true
     volumes:
-      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www:delegated
+      - ./keys:/home/develop/.keys
 
   workspace-php-73:
     container_name: workspace-php-73
@@ -73,7 +87,8 @@ services:
         - PHP_VERSION=7.3
     tty: true
     volumes:
-      - ${APP_CODE_PATH_HOST}:/srv/www
+      - ${APP_CODE_PATH_HOST}:/srv/www:delegated
+      - ./keys:/home/develop/.keys
 
   mysql-80:
     container_name: mysql-80
@@ -84,7 +99,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ~/.docker-php-dev/data/mysql80:/var/lib/mysql
+      - ~/.docker-php-dev-data/data/mysql-80:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
 
@@ -97,7 +112,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ~/.docker-php-dev/data/postgres13:/var/lib/postgresql/data
+      - ~/.docker-php-dev-data/data/postgres-13:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=root
 
@@ -110,7 +125,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ~/.docker-php-dev/data/mongo:/data/db
+      - ~/.docker-php-dev-data/data/mongo-4:/data/db
 
   memcached-1:
     container_name: memcached-1
@@ -130,7 +145,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ~/.docker-php-dev/data/redis6:/data
+      - ~/.docker-php-dev-data/data/redis-6:/data
 
   elasticsearch-7:
     container_name: elasticsearch-7
@@ -144,7 +159,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - ~/.docker-php-dev/data/elasticsearch7:/usr/share/elasticsearch/data
+      - ~/.docker-php-dev-data/data/elasticsearch-7:/usr/share/elasticsearch/data
 
   mail:
     container_name: mail

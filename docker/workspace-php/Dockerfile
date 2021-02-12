@@ -1,56 +1,74 @@
 ARG PHP_VERSION=8.0
-FROM php:${PHP_VERSION}-cli-buster
+FROM php:${PHP_VERSION}-cli-alpine
 
-ARG INSTALL_INTL=true
-ARG INSTALL_OPCACHE=true
-ARG INSTALL_XDEBUG=true
-ARG INSTALL_REDIS=true
-ARG INSTALL_MONGO=true
-ARG INSTALL_PDO_MYSQL=true
-ARG INSTALL_PDO_PGSQL=true
+# Install php extension installer
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+# Install composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+ARG INSTALL_INTL=false
+ARG INSTALL_OPCACHE=false
+ARG INSTALL_XDEBUG=false
+ARG INSTALL_REDIS=false
+ARG INSTALL_MONGO=false
+ARG INSTALL_PDO_MYSQL=false
+ARG INSTALL_PDO_PGSQL=false
+ARG INSTALL_EXIF=false
+ARG INSTALL_GD=false
+ARG INSTALL_IMAGICK=false
+ARG INSTALL_PCOV=false
+ARG INSTALL_XHPROF=false
+
 USER root
 RUN set -eux; \
-    apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-        locales \
-        libpq-dev \
-        openssh-client \
-        git \
-        curl \
-        vim \
-        zsh \
-        zsh-syntax-highlighting \
-        zsh-autosuggestions; \
-    locale-gen en_US.UTF-8; \
+    apk add --no-cache --virtual .build-deps pcre-dev ${PHPIZE_DEPS}; \
+    apk add --no-cache shadow sudo openssh-client git curl vim zsh zsh-autosuggestions zsh-syntax-highlighting gnupg; \
+    php_ext="zip"; \
     if [ ${INSTALL_OPCACHE} = true ]; then \
-        docker-php-ext-enable opcache; \
+        php_ext="opcache ${php_ext}"; \
+    fi; \
+    if [ ${INSTALL_EXIF} = true ]; then \
+            php_ext="exif ${php_ext}"; \
+    fi; \
+    if [ ${INSTALL_GD} = true ]; then \
+            php_ext="gd ${php_ext}"; \
+    fi; \
+    if [ ${INSTALL_IMAGICK} = true ]; then \
+            php_ext="imagick ${php_ext}"; \
+    fi; \
+    if [ ${INSTALL_PCOV} = true ]; then \
+            php_ext="pcov ${php_ext}"; \
+    fi; \
+    if [ ${INSTALL_XHPROF} = true ]; then \
+            php_ext="xhprof ${php_ext}"; \
     fi; \
     if [ ${INSTALL_INTL} = true ]; then \
-        apt-get install -y --no-install-recommends  libicu-dev && docker-php-ext-configure intl && docker-php-ext-install intl; \
+        php_ext="intl ${php_ext}"; \
     fi; \
     if [ ${INSTALL_PDO_MYSQL} = true ]; then \
-        docker-php-ext-install pdo_mysql; \
+        php_ext="pdo_mysql ${php_ext}"; \
     fi; \
     if [ ${INSTALL_PDO_PGSQL} = true ]; then \
-        docker-php-ext-install pdo_pgsql; \
+        php_ext="pdo_pgsql ${php_ext}"; \
     fi; \
     if [ ${INSTALL_XDEBUG} = true ]; then \
         if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-            pecl install xdebug-2.9.8; \
+            php_ext="xdebug-^2.9 ${php_ext}"; \
         else \
-            pecl install xdebug; \
-        fi \
-        && docker-php-ext-enable xdebug; \
+            php_ext="xdebug ${php_ext}"; \
+        fi; \
     fi; \
     if [ ${INSTALL_REDIS} = true ]; then \
-        pecl install -o -f redis && docker-php-ext-enable redis; \
+        php_ext="redis ${php_ext}"; \
     fi; \
     if [ ${INSTALL_MONGO} = true ]; then \
-        pecl install mongodb && docker-php-ext-enable mongodb; \
+        php_ext="mongodb ${php_ext}"; \
     fi; \
-    groupadd -g 1000 develop && useradd -u 1000 -g develop -m -G sudo develop; \
-    apt-get clean;
+    install-php-extensions ${php_ext}; \
+    apk del --no-cache --no-network .build-deps; \
+    adduser --disabled-password --shell /bin/zsh develop; addgroup develop wheel; \
+    touch /etc/pam.d/chsh && echo 'auth        sufficient  pam_rootok.so' > /etc/pam.d/chsh; \
+    echo '%wheel ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/wheel;
 
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
@@ -58,14 +76,23 @@ ENV LC_CTYPE=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV TERM xterm-256color
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install zsh/ohmyzsh for root
+USER root
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; \
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k;
+COPY --chown=root:root .zshrc /root/.zshrc
+COPY --chown=root:root .p10k.zsh /root/.p10k.zsh
 
+# Install zsh/ohmyzsh for root
 USER develop
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; \
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k;
-
 COPY --chown=develop:develop .zshrc /home/develop/.zshrc
 COPY --chown=develop:develop .p10k.zsh /home/develop/.p10k.zsh
+
+# Change default shell
+USER root
+RUN chsh -s $(which zsh)
 
 USER develop
 ENV TERM xterm-256color
