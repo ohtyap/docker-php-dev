@@ -11,6 +11,10 @@ services:
       context: docker/nginx
       args:
         - PHP_UPSTREAMS=php-fpm-80 php-fpm-74 php-fpm-73
+    depends_on:
+      - php-fpm-80
+      - php-fpm-74
+      - php-fpm-73
     ports:
       - "80:80"
       - "443:443"
@@ -24,6 +28,16 @@ services:
       context: docker/php-fpm
       args:
         - PHP_VERSION=8.0
+        - INSTALL_INTL=true
+        - INSTALL_OPCACHE=true
+        - INSTALL_XDEBUG=true
+        - INSTALL_REDIS=true
+        - INSTALL_MONGO=true
+        - INSTALL_PDO_MYSQL=true
+        - INSTALL_PDO_PGSQL=true
+        - INSTALL_EXIF=true
+        - INSTALL_GD=true
+        - INSTALL_IMAGICK=true
     volumes:
       - ${APP_CODE_PATH_HOST}:/srv/www:delegated
 
@@ -33,6 +47,16 @@ services:
       context: docker/php-fpm
       args:
         - PHP_VERSION=7.4
+        - INSTALL_INTL=true
+        - INSTALL_OPCACHE=true
+        - INSTALL_XDEBUG=true
+        - INSTALL_REDIS=true
+        - INSTALL_MONGO=true
+        - INSTALL_PDO_MYSQL=true
+        - INSTALL_PDO_PGSQL=true
+        - INSTALL_EXIF=true
+        - INSTALL_GD=true
+        - INSTALL_IMAGICK=true
     volumes:
       - ${APP_CODE_PATH_HOST}:/srv/www:delegated
 
@@ -42,6 +66,16 @@ services:
       context: docker/php-fpm
       args:
         - PHP_VERSION=7.3
+        - INSTALL_INTL=true
+        - INSTALL_OPCACHE=true
+        - INSTALL_XDEBUG=true
+        - INSTALL_REDIS=true
+        - INSTALL_MONGO=true
+        - INSTALL_PDO_MYSQL=true
+        - INSTALL_PDO_PGSQL=true
+        - INSTALL_EXIF=true
+        - INSTALL_GD=true
+        - INSTALL_IMAGICK=true
     volumes:
       - ${APP_CODE_PATH_HOST}:/srv/www:delegated
 
@@ -168,3 +202,9 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+
+  kali:
+    container_name: kali
+    build:
+      context: docker/kali
+    tty: true

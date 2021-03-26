@@ -52,11 +52,7 @@ RUN set -eux; \
         php_ext="pdo_pgsql ${php_ext}"; \
     fi; \
     if [ ${INSTALL_XDEBUG} = true ]; then \
-        if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-            php_ext="xdebug-^2.9 ${php_ext}"; \
-        else \
-            php_ext="xdebug ${php_ext}"; \
-        fi; \
+        php_ext="xdebug ${php_ext}"; \
     fi; \
     if [ ${INSTALL_REDIS} = true ]; then \
         php_ext="redis ${php_ext}"; \
@@ -65,8 +61,10 @@ RUN set -eux; \
         php_ext="mongodb ${php_ext}"; \
     fi; \
     install-php-extensions ${php_ext}; \
+    cp $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini; \
     apk del --no-cache --no-network .build-deps; \
     adduser --disabled-password --shell /bin/zsh develop; addgroup develop wheel; \
+    mkdir -p /opt && chmod 0777 /opt; \
     touch /etc/pam.d/chsh && echo 'auth        sufficient  pam_rootok.so' > /etc/pam.d/chsh; \
     echo '%wheel ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/wheel;
 
@@ -92,7 +90,7 @@ COPY --chown=develop:develop .p10k.zsh /home/develop/.p10k.zsh
 
 # Change default shell
 USER root
-RUN chsh -s $(which zsh)
+RUN chsh -s $(which zsh) && chsh -s $(which zsh) develop
 
 USER develop
 ENV TERM xterm-256color
