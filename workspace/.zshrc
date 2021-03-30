@@ -22,3 +22,16 @@ source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+if [ $(id -u -n) = "develop" ] ; then
+  /usr/bin/keychain -q ~/.ssh/id_ed25519
+  source ~/.keychain/$HOSTNAME-sh
+
+  export GPG_TTY=$(tty)
+  gpg --list-secret-keys $(head -1 ~/.gpg/keyid.txt) > /dev/null 2>&1
+  found=$?
+  if [ $found -ne 0 ]; then
+     gpg --import ~/.gpg/gpg.key
+     git config --global user.signingkey $(head -1 ~/.gpg/signingkey.txt)
+  fi
+fi

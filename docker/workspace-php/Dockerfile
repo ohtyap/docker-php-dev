@@ -22,7 +22,7 @@ ARG INSTALL_XHPROF=false
 USER root
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps pcre-dev ${PHPIZE_DEPS}; \
-    apk add --no-cache shadow sudo openssh-client git curl vim zsh zsh-autosuggestions zsh-syntax-highlighting gnupg; \
+    apk add --no-cache shadow sudo openssh-client git curl vim zsh zsh-autosuggestions zsh-syntax-highlighting gnupg keychain; \
     php_ext="zip"; \
     if [ ${INSTALL_OPCACHE} = true ]; then \
         php_ext="opcache ${php_ext}"; \
@@ -78,15 +78,25 @@ ENV TERM xterm-256color
 USER root
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; \
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k;
-COPY --chown=root:root .zshrc /root/.zshrc
-COPY --chown=root:root .p10k.zsh /root/.p10k.zsh
+COPY --chown=root:root workspace/.zshrc /root/.zshrc
+COPY --chown=root:root workspace/.p10k.zsh /root/.p10k.zsh
 
 # Install zsh/ohmyzsh for root
 USER develop
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; \
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k;
-COPY --chown=develop:develop .zshrc /home/develop/.zshrc
-COPY --chown=develop:develop .p10k.zsh /home/develop/.p10k.zsh
+COPY --chown=develop:develop workspace/.zshrc /home/develop/.zshrc
+COPY --chown=develop:develop workspace/.p10k.zsh /home/develop/.p10k.zsh
+
+COPY --chown=develop:develop workspace/.gitconfig /home/develop/.gitconfig
+COPY --chown=develop:develop workspace/id_ed25519 /home/develop/.ssh/id_ed25519
+COPY --chown=develop:develop workspace/id_ed25519.pub /home/develop/.ssh/id_ed25519.pub
+COPY --chown=develop:develop workspace/gpg.key /home/develop/.gpg/gpg.key
+COPY --chown=develop:develop workspace/keyid.txt /home/develop/.gpg/keyid.txt
+COPY --chown=develop:develop workspace/signingkey.txt /home/develop/.gpg/signingkey.txt
+USER develop
+RUN chmod 0700 /home/develop/.ssh/id_ed25519 && chmod 0700 /home/develop/.ssh/id_ed25519.pub; \
+    chmod 0700 /home/develop/.gpg/gpg.key && chmod 0700 /home/develop/.gpg/keyid.txt && chmod 0700 /home/develop/.gpg/signingkey.txt;
 
 # Change default shell
 USER root

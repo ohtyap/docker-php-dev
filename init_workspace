@@ -1,0 +1,32 @@
+#!/bin/bash
+DIR=$(cd "$(dirname "$0")"; pwd)
+if [ ! -f $DIR/workspace/.gitconfig ]; then
+    echo "File not found!"
+    touch $DIR/workspace/.gitconfig
+    echo "[user]" > $DIR/workspace/.gitconfig
+    echo "Your name (for git):"
+    read name
+    echo "        name = $name" >> $DIR/workspace/.gitconfig
+    echo "Your email (for git):"
+    read email
+    echo "        email = $email" >> $DIR/workspace/.gitconfig
+    echo "[commit]" >> $DIR/workspace/.gitconfig
+    echo "        gpgsign = true" >> $DIR/workspace/.gitconfig
+    echo "[tag]" >> $DIR/workspace/.gitconfig
+    echo "        gpgSign = true" >> $DIR/workspace/.gitconfig
+    echo "[init]" >> $DIR/workspace/.gitconfig
+    echo "        defaultBranc = main" >> $DIR/workspace/.gitconfig
+    echo "        defaultBranch = main" >> $DIR/workspace/.gitconfig
+fi
+if [ ! -f $DIR/workspace/id_ed25519 ]; then
+    echo "Your email (for ssh key):"
+    read email
+    ssh-keygen -t ed25519 -C $email -f $DIR/workspace/id_ed25519
+fi
+if [ ! -f $DIR/workspace/id_ed25519.gpg ]; then
+    echo "Please run:"
+    echo "gpg --full-generate-key"
+    echo "echo \"<id>\" > $DIR/workspace/keyid.txt"
+    echo "echo \"<signingkey>\" > $DIR/workspace/signingkey.txt"
+    echo "gpg --export-secret-keys <id> > $DIR/workspace/gpg.key"
+fi
